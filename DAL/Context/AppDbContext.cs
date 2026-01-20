@@ -1,13 +1,10 @@
-﻿using DAL.Commons;
-using DAL.Models;
+﻿using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Context
 {
     public class AppDbContext : DbContext
     {
-        private readonly DatabaseType _databaseType;
-
         // Existing DbSets
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Voucher> Vouchers { get; set; }
@@ -54,10 +51,9 @@ namespace DAL.Context
         public virtual DbSet<AdminLog> AdminLogs { get; set; }
         public virtual DbSet<PlatformRevenue> PlatformRevenues { get; set; }
 
-        public AppDbContext(DbContextOptions<AppDbContext> options, DatabaseType databaseType = DatabaseType.SqlServer) 
+        public AppDbContext(DbContextOptions<AppDbContext> options) 
             : base(options)
         {
-            _databaseType = databaseType;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -71,37 +67,37 @@ namespace DAL.Context
                 .HasMany(s => s.ServicePromotions)
                 .WithOne(sp => sp.Service)
                 .HasForeignKey(sp => sp.ServiceId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Service>()
                 .HasOne(s => s.HomestayService)
                 .WithOne(hs => hs.Service)
                 .HasForeignKey<HomestayService>(hs => hs.ServiceId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Service>()
                 .HasOne(s => s.TourService)
                 .WithOne(ts => ts.Service)
                 .HasForeignKey<TourService>(ts => ts.ServiceId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Service>()
                 .HasOne(s => s.VehicleRentalService)
                 .WithOne(vrs => vrs.Service)
                 .HasForeignKey<VehicleRentalService>(vrs => vrs.ServiceId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Service>()
                 .HasMany(s => s.ServiceFeedbacks)
                 .WithOne(sf => sf.Service)
                 .HasForeignKey(sf => sf.ServiceId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Service>()
                 .HasMany(s => s.ServiceRatings)
                 .WithOne(sr => sr.Service)
                 .HasForeignKey(sr => sr.ServiceId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Service>()
                 .HasMany(s => s.ServiceImages)
@@ -126,65 +122,65 @@ namespace DAL.Context
                 .HasMany(c => c.ComboItems)
                 .WithOne(ci => ci.Combo)
                 .HasForeignKey(ci => ci.ComboId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ComboItem>()
                 .HasOne(ci => ci.Service)
                 .WithMany(s => s.ComboItems)
                 .HasForeignKey(ci => ci.ServiceId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Homestay relationships
             modelBuilder.Entity<HomestayService>()
                 .HasMany(hs => hs.HomestayRooms)
                 .WithOne(hr => hr.HomestayService)
                 .HasForeignKey(hr => hr.HomestayId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<HomestayService>()
                 .HasMany(hs => hs.HomestayAvailabilities)
                 .WithOne(ha => ha.HomestayService)
                 .HasForeignKey(ha => ha.HomestayId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<HomestayService>()
                 .HasMany(hs => hs.HomestayBookings)
                 .WithOne(hb => hb.HomestayService)
                 .HasForeignKey(hb => hb.HomestayId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Tour relationships
             modelBuilder.Entity<TourService>()
                 .HasMany(ts => ts.TourSchedules)
                 .WithOne(tch => tch.TourService)
                 .HasForeignKey(tch => tch.TourId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TourService>()
                 .HasMany(ts => ts.TourItineraries)
                 .WithOne(ti => ti.TourService)
                 .HasForeignKey(ti => ti.TourId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // User relationships
             modelBuilder.Entity<User>()
                 .HasMany(u => u.BankAccounts)
                 .WithOne(uba => uba.User)
                 .HasForeignKey(uba => uba.UserId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.SavedLocations)
                 .WithOne(sl => sl.User)
                 .HasForeignKey(sl => sl.UserId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Partner relationships
             modelBuilder.Entity<Partner>()
                 .HasMany(p => p.PartnerLocations)
                 .WithOne(pl => pl.Partner)
                 .HasForeignKey(pl => pl.PartnerId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Composite key for PartnerLocation
             modelBuilder.Entity<PartnerLocation>()
@@ -195,14 +191,14 @@ namespace DAL.Context
                 .HasMany(l => l.ServiceRatings)
                 .WithOne(sr => sr.Location)
                 .HasForeignKey(sr => sr.LocationId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Booking relationships
             modelBuilder.Entity<Booking>()
                 .HasMany(b => b.ServiceFeedbacks)
                 .WithOne(sf => sf.Booking)
                 .HasForeignKey(sf => sf.BookingId)
-                .OnDelete(_databaseType == DatabaseType.Sqlite ? DeleteBehavior.Cascade : DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Booking>()
                 .HasMany(b => b.BookingItems)
@@ -307,28 +303,6 @@ namespace DAL.Context
                 .Property(d => d.Longitude)
                 .HasPrecision(9, 6);
 
-            // SQLite-specific configurations
-            if (_databaseType == DatabaseType.Sqlite)
-            {
-                ConfigureForSqlite(modelBuilder);
-            }
-        }
-
-        private void ConfigureForSqlite(ModelBuilder modelBuilder)
-        {
-            // Configure string properties for SQLite
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                foreach (var property in entityType.GetProperties())
-                {
-                    if (property.ClrType == typeof(string))
-                    {
-                        modelBuilder.Entity(entityType.ClrType)
-                            .Property(property.Name)
-                            .HasColumnType("TEXT");
-                    }
-                }
-            }
         }
     }
 }

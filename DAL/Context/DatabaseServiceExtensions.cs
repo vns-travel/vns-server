@@ -1,4 +1,3 @@
-using DAL.Commons;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -7,15 +6,13 @@ namespace DAL.Context
 {
     public static class DatabaseServiceExtensions
     {
-        public static IServiceCollection AddDatabaseServices(this IServiceCollection services, DatabaseConfig databaseConfig)
+        public static IServiceCollection AddDatabaseServices(this IServiceCollection services, string connectionString)
         {
             services.AddDbContext<AppDbContext>(options =>
             {
-                databaseConfig.ConfigureDbContext(options);
+                options.UseSqlServer(connectionString);
             }, ServiceLifetime.Scoped);
 
-            services.AddSingleton(databaseConfig);
-            
             return services;
         }
 
@@ -24,11 +21,9 @@ namespace DAL.Context
             using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
-            var databaseConfig = scope.ServiceProvider.GetRequiredService<DatabaseConfig>();
-
             try
             {
-                logger.LogInformation($"Initializing database: {databaseConfig.DatabaseType}");
+                logger.LogInformation("Initializing database: SqlServer");
                 
                 // Ensure database is created
                 await context.Database.EnsureCreatedAsync();
@@ -51,9 +46,5 @@ namespace DAL.Context
             }
         }
 
-        public static string GetDatabaseInfo(this DatabaseConfig databaseConfig)
-        {
-            return $"Database Type: {databaseConfig.DatabaseType}, Connection: {databaseConfig.ConnectionString}";
-        }
     }
 } 

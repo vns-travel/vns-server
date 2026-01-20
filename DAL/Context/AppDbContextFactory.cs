@@ -1,4 +1,3 @@
-using DAL.Commons;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -25,27 +24,13 @@ namespace DAL.Context
             }
 
             var configuration = configBuilder.Build();
-            var databaseTypeValue = configuration.GetValue<string>("Database:Type") ?? "sqlite";
             var connectionString = configuration.GetConnectionString("DefaultConnection")
-                                  ?? configuration.GetConnectionString("SqliteConnection")
-                                  ?? "Data Source=VNS_Travel.db";
-
-            var databaseType = databaseTypeValue.ToLower() switch
-            {
-                "sqlserver" => DAL.Commons.DatabaseType.SqlServer,
-                "sqlite" => DAL.Commons.DatabaseType.Sqlite,
-                _ => DAL.Commons.DatabaseType.Sqlite
-            };
+                                  ?? "Server=KIETTA\\SQLEXPRESS;Database=VNS_Travel;Trusted_Connection=True;TrustServerCertificate=True;";
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            var databaseConfig = new DatabaseConfig
-            {
-                DatabaseType = databaseType,
-                ConnectionString = connectionString
-            };
-            databaseConfig.ConfigureDbContext(optionsBuilder);
+            optionsBuilder.UseSqlServer(connectionString);
 
-            return new AppDbContext(optionsBuilder.Options, databaseType);
+            return new AppDbContext(optionsBuilder.Options);
         }
     }
 }

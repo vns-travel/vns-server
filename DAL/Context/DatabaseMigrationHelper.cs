@@ -1,4 +1,3 @@
-using DAL.Commons;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -7,13 +6,11 @@ namespace DAL.Context
     public class DatabaseMigrationHelper
     {
         private readonly AppDbContext _context;
-        private readonly DatabaseConfig _databaseConfig;
         private readonly ILogger<DatabaseMigrationHelper> _logger;
 
-        public DatabaseMigrationHelper(AppDbContext context, DatabaseConfig databaseConfig, ILogger<DatabaseMigrationHelper> logger)
+        public DatabaseMigrationHelper(AppDbContext context, ILogger<DatabaseMigrationHelper> logger)
         {
             _context = context;
-            _databaseConfig = databaseConfig;
             _logger = logger;
         }
 
@@ -21,24 +18,24 @@ namespace DAL.Context
         {
             try
             {
-                _logger.LogInformation($"Ensuring database exists for {_databaseConfig.DatabaseType}");
+                _logger.LogInformation("Ensuring database exists");
                 
                 var created = await _context.Database.EnsureCreatedAsync();
                 
                 if (created)
                 {
-                    _logger.LogInformation($"Database created successfully for {_databaseConfig.DatabaseType}");
+                    _logger.LogInformation("Database created successfully");
                 }
                 else
                 {
-                    _logger.LogInformation($"Database already exists for {_databaseConfig.DatabaseType}");
+                    _logger.LogInformation("Database already exists");
                 }
                 
                 return created;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error creating database for {_databaseConfig.DatabaseType}");
+                _logger.LogError(ex, "Error creating database");
                 throw;
             }
         }
@@ -51,7 +48,7 @@ namespace DAL.Context
                 
                 if (pendingMigrations.Any())
                 {
-                    _logger.LogInformation($"Applying {pendingMigrations.Count()} pending migrations for {_databaseConfig.DatabaseType}");
+                    _logger.LogInformation($"Applying {pendingMigrations.Count()} pending migrations");
                     await _context.Database.MigrateAsync();
                     _logger.LogInformation("Migrations applied successfully");
                 }
@@ -62,7 +59,7 @@ namespace DAL.Context
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error applying migrations for {_databaseConfig.DatabaseType}");
+                _logger.LogError(ex, "Error applying migrations");
                 throw;
             }
         }
@@ -74,7 +71,7 @@ namespace DAL.Context
                 var providerName = _context.Database.ProviderName;
                 var connectionString = _context.Database.GetConnectionString();
                 
-                return $"Provider: {providerName}, Connection: {connectionString}, Type: {_databaseConfig.DatabaseType}";
+                return $"Provider: {providerName}, Connection: {connectionString}";
             }
             catch (Exception ex)
             {
@@ -91,7 +88,7 @@ namespace DAL.Context
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Cannot connect to database: {_databaseConfig.DatabaseType}");
+                _logger.LogError(ex, "Cannot connect to database");
                 return false;
             }
         }

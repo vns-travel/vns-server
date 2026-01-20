@@ -20,11 +20,12 @@ builder.Configuration.AddUserSecrets<Program>();
 // Add services to the container.
 
 // Configure database
-var databaseConfig = DatabaseConfig.FromConfiguration(builder.Configuration);
-builder.Services.ResolveServices(builder.Configuration, databaseConfig.ConnectionString);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Missing DefaultConnection");
+builder.Services.ResolveServices(builder.Configuration, connectionString);
 
 // Add database services using extension method
-builder.Services.AddDatabaseServices(databaseConfig);
+builder.Services.AddDatabaseServices(connectionString);
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
