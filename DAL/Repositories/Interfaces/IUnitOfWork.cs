@@ -34,6 +34,17 @@
         public IVehicleRentalServiceRepository VehicleRentalService { get; }
         public IVehicleRepository Vehicle { get; }
         public IVoucherRepository Voucher { get; }
+        public IAuthProviderRepository AuthProvider { get; }
+        public IDestinationRepository Destination { get; }
+        public IDestinationImageRepository DestinationImage { get; }
+        public IServiceImageRepository ServiceImage { get; }
+        public IBookingItemRepository BookingItem { get; }
+        public IReviewRepository Review { get; }
+        public IConversationRepository Conversation { get; }
+        public INotificationRepository Notification { get; }
+        public IAdminLogRepository AdminLog { get; }
+        public IPlatformRevenueRepository PlatformRevenue { get; }
+        public IOtpCodeRepository OtpCode { get; }
         Task SaveChangesAsync();
         void Dispose();       
     }

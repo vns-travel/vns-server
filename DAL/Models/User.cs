@@ -35,5 +35,8 @@ namespace DAL.Models
         public virtual ICollection<SavedLocation> SavedLocations { get; set; }
         public virtual ICollection<Voucher> Vouchers { get; set; }
         public virtual ICollection<ServiceFeedback> ServiceFeedbacks { get; set; }
+        public virtual ICollection<AuthProvider> AuthProviders { get; set; }
+        public virtual ICollection<Notification> Notifications { get; set; }
+        public virtual ICollection<Review> Reviews { get; set; }
     }
 }

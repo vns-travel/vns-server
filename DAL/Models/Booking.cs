@@ -48,5 +48,7 @@ namespace DAL.Models
         public virtual ICollection<Payment> Payments { get; set; }
         public virtual ICollection<Refund> Refunds { get; set; }
         public virtual ICollection<ServiceFeedback> ServiceFeedbacks { get; set; }
+        public virtual ICollection<BookingItem> BookingItems { get; set; }
+        public virtual ICollection<Review> Reviews { get; set; }
     }
 }

@@ -14,6 +14,11 @@ namespace DAL.Models
         [Required]
         public Guid LocationId { get; set; }
 
+        /// <summary>
+        /// New schema destination linkage; kept optional for compatibility.
+        /// </summary>
+        public Guid? DestinationId { get; set; }
+
         public int ServiceType { get; set; } // 1: homestay, 2: vehicle_rental, 3: tour
 
         [Required]
@@ -25,6 +30,7 @@ namespace DAL.Models
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation Properties
@@ -34,13 +40,26 @@ namespace DAL.Models
         [ForeignKey("LocationId")]
         public virtual Location Location { get; set; }
 
+        public virtual Destination? Destination { get; set; }
+
         public virtual HomestayService HomestayService { get; set; }
+
         public virtual VehicleRentalService VehicleRentalService { get; set; }
+
         public virtual TourService TourService { get; set; }
 
         public virtual ICollection<ComboItem> ComboItems { get; set; }
+
         public virtual ICollection<ServicePromotion> ServicePromotions { get; set; }
+
         public virtual ICollection<ServiceFeedback> ServiceFeedbacks { get; set; }
+
         public virtual ICollection<ServiceRating> ServiceRatings { get; set; }
+
+        public virtual ICollection<ServiceImage> ServiceImages { get; set; }
+
+        public virtual ICollection<BookingItem> BookingItems { get; set; }
+
+        public virtual ICollection<Review> Reviews { get; set; }
     }
 }

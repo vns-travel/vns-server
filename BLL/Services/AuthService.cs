@@ -3,7 +3,9 @@ using DAL.Models;
 using DAL.Models.Enum;
 using DAL.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 
 namespace BLL.Services
 {
@@ -23,7 +25,6 @@ namespace BLL.Services
         private readonly IJwtService _jwtService;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IEmailService _emailService;
-        private static readonly Dictionary<string, (string OTP, DateTime Expiry)> _otpStore = new();
 
         public AuthService(
             IUnitOfWork unitOfWork,
@@ -43,7 +44,8 @@ namespace BLL.Services
             {
                 throw new Exception("Password is required.");
             }
-            var existingUser = await _unitOfWork.User.GetAsync(u => u.Email == model.Email);
+            var email = NormalizeEmail(model.Email);
+            var existingUser = await _unitOfWork.User.GetAsync(u => u.Email == email);
             if (existingUser != null)
             {
                 throw new Exception("User with this email already exists");
@@ -52,24 +54,26 @@ namespace BLL.Services
             var user = new User
             {
                 UserId = Guid.NewGuid(),
-                Email = model.Email,
+                Email = email,
                 FullName = $"{model.FullName}",
                 PhoneNumber = model.PhoneNumber,
                 Role = (int)Role.Customer, // Default role
-                Password = _passwordHasher.HashPassword(null!, model.Password)
+                Password = string.Empty
             };
+            user.Password = _passwordHasher.HashPassword(user, model.Password);
 
             await _unitOfWork.User.AddAsync(user);
             await _unitOfWork.SaveChangesAsync();
 
             var token = _jwtService.GenerateJwtToken(user);
-            var refreshToken = _jwtService.GenerateRefreshToken();
+            var refreshToken = _jwtService.GenerateRefreshToken(user);
+            var expiresAt = GetTokenExpiryUtc(token);
 
             return new AuthResponseDTO
             {
                 Token = token,
                 RefreshToken = refreshToken,
-                ExpiresAt = DateTime.Now.AddHours(24), // Match with JWT expiration
+                ExpiresAt = expiresAt,
                 UserId = user.UserId.ToString(),
                 Email = user.Email,
                 Role = user.Role.ToString()
@@ -78,10 +82,16 @@ namespace BLL.Services
 
         public async Task<AuthResponseDTO> LoginAsync(LoginDTO model)
         {
-            var user = await _unitOfWork.User.GetAsync(u => u.Email == model.Email);
+            var email = NormalizeEmail(model.Email);
+            var user = await _unitOfWork.User.GetAsync(u => u.Email == email);
             if (user == null)
             {
                 throw new Exception("Invalid email or password");
+            }
+
+            if (string.IsNullOrWhiteSpace(user.Password))
+            {
+                throw new Exception("This account uses social login");
             }
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.Password, model.Password);
@@ -91,13 +101,14 @@ namespace BLL.Services
             }
 
             var token = _jwtService.GenerateJwtToken(user);
-            var refreshToken = _jwtService.GenerateRefreshToken();
+            var refreshToken = _jwtService.GenerateRefreshToken(user);
+            var expiresAt = GetTokenExpiryUtc(token);
 
             return new AuthResponseDTO
             {
                 Token = token,
                 RefreshToken = refreshToken,
-                ExpiresAt = DateTime.Now.AddHours(24),
+                ExpiresAt = expiresAt,
                 UserId = user.UserId.ToString(),
                 Email = user.Email,
                 Role = user.Role.ToString()
@@ -112,6 +123,18 @@ namespace BLL.Services
                 throw new Exception("Invalid refresh token");
             }
 
+            var tokenType = principal.FindFirst("typ")?.Value;
+            if (!string.Equals(tokenType, "refresh", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception("Invalid refresh token");
+            }
+
+            var refreshExpiry = GetTokenExpiryUtc(refreshToken);
+            if (refreshExpiry <= DateTime.UtcNow)
+            {
+                throw new Exception("Refresh token expired");
+            }
+
             var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
             var user = await _unitOfWork.User.GetAsync(u => u.UserId == userId);
             if (user == null)
@@ -120,13 +143,14 @@ namespace BLL.Services
             }
 
             var newToken = _jwtService.GenerateJwtToken(user);
-            var newRefreshToken = _jwtService.GenerateRefreshToken();
+            var newRefreshToken = _jwtService.GenerateRefreshToken(user);
+            var expiresAt = GetTokenExpiryUtc(newToken);
 
             return new AuthResponseDTO
             {
                 Token = newToken,
                 RefreshToken = newRefreshToken,
-                ExpiresAt = DateTime.Now.AddHours(24),
+                ExpiresAt = expiresAt,
                 UserId = user.UserId.ToString(),
                 Email = user.Email,
                 Role = user.Role.ToString()
@@ -135,37 +159,57 @@ namespace BLL.Services
 
         public async Task SendForgotPasswordOTPAsync(ForgotPasswordDTO model)
         {
-            var user = await _unitOfWork.User.GetAsync(u => u.Email == model.Email);
+            var email = NormalizeEmail(model.Email);
+            var user = await _unitOfWork.User.GetAsync(u => u.Email == email);
             if (user == null)
             {
                 throw new Exception("User not found");
             }
 
             // Generate 6-digit OTP
-            var otp = new Random().Next(100000, 999999).ToString();
+            var otp = GenerateOtpCode();
             var expiry = DateTime.UtcNow.AddMinutes(5);
 
-            // Store OTP with expiry
-            _otpStore[model.Email] = (otp, expiry);
+            var existingOtp = await _unitOfWork.OtpCode.GetAsync(o => o.Email == email, tracked: true);
+            if (existingOtp == null)
+            {
+                var otpEntity = new OtpCode
+                {
+                    Email = email,
+                    Code = otp,
+                    Expiry = expiry
+                };
+                await _unitOfWork.OtpCode.AddAsync(otpEntity);
+            }
+            else
+            {
+                existingOtp.Code = otp;
+                existingOtp.Expiry = expiry;
+                await _unitOfWork.OtpCode.UpdateAsync(existingOtp);
+            }
+            await _unitOfWork.SaveChangesAsync();
 
             // Send OTP via email
-            await _emailService.SendOTPEmailAsync(model.Email, otp);
+            await _emailService.SendOTPEmailAsync(email, otp);
         }
 
         public async Task<bool> VerifyOTPAsync(VerifyOTPDTO model)
         {
-            if (!_otpStore.TryGetValue(model.Email, out var otpData))
+            var email = NormalizeEmail(model.Email);
+            var otpEntity = await _unitOfWork.OtpCode.GetAsync(o => o.Email == email, tracked: true);
+            if (otpEntity == null)
             {
                 throw new Exception("OTP not found or expired");
             }
 
-            if (DateTime.UtcNow > otpData.Expiry)
+            if (DateTime.UtcNow > otpEntity.Expiry)
             {
-                _otpStore.Remove(model.Email);
+                await _unitOfWork.OtpCode.RemoveAsync(otpEntity);
+                await _unitOfWork.SaveChangesAsync();
                 throw new Exception("OTP has expired");
             }
 
-            if (otpData.OTP != model.OTP)
+            if (!string.Equals(otpEntity.Code, model.OTP, StringComparison.Ordinal))
             {
                 throw new Exception("Invalid OTP");
             }
@@ -178,7 +222,8 @@ namespace BLL.Services
             // Verify OTP first
             await VerifyOTPAsync(new VerifyOTPDTO { Email = model.Email, OTP = model.OTP });
 
-            var user = await _unitOfWork.User.GetAsync(u => u.Email == model.Email);
+            var email = NormalizeEmail(model.Email);
+            var user = await _unitOfWork.User.GetAsync(u => u.Email == email);
             if (user == null)
             {
                 throw new Exception("User not found");
@@ -187,10 +232,29 @@ namespace BLL.Services
             // Update password
             user.Password = _passwordHasher.HashPassword(user, model.NewPassword);
             await _unitOfWork.User.UpdateAsync(user);
+            var otpEntity = await _unitOfWork.OtpCode.GetAsync(o => o.Email == email, tracked: true);
+            if (otpEntity != null)
+            {
+                await _unitOfWork.OtpCode.RemoveAsync(otpEntity);
+            }
             await _unitOfWork.SaveChangesAsync();
+        }
 
-            // Remove used OTP
-            _otpStore.Remove(model.Email);
+        private static string NormalizeEmail(string email)
+        {
+            return email.Trim().ToLowerInvariant();
+        }
+
+        private static string GenerateOtpCode()
+        {
+            var value = RandomNumberGenerator.GetInt32(100000, 1000000);
+            return value.ToString();
+        }
+
+        private static DateTime GetTokenExpiryUtc(string token)
+        {
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            return jwt.ValidTo.ToUniversalTime();
         }
     }
 } 

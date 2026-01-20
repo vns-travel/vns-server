@@ -17,6 +17,12 @@ namespace Presentation
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IServiceManager, ServiceManager>();
             services.AddScoped<IBookingService, BookingService>();
+            services.AddScoped<IDestinationService, DestinationService>();
+            services.AddScoped<IDestinationImageService, DestinationImageService>();
+            services.AddScoped<IServiceImageService, ServiceImageService>();
+            services.AddScoped<IBookingItemService, BookingItemService>();
+            services.AddScoped<IReviewService, ReviewService>();
+            services.AddScoped<INotificationService, NotificationService>();
             
             // Partner Homestay composite create handled by ServiceManager
 

@@ -31,6 +31,14 @@ namespace BLL
                 .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
                 .ForMember(dest => dest.LocationId, opt => opt.MapFrom(src => src.LocationId))
                 .ReverseMap();
+
+            CreateMap<Destination, DestinationDto>().ReverseMap();
+            CreateMap<DestinationImage, DestinationImageDto>().ReverseMap();
+            CreateMap<ServiceImage, ServiceImageDto>().ReverseMap();
+            CreateMap<BookingItem, BookingItemDto>().ReverseMap();
+            CreateMap<Review, ReviewDto>().ReverseMap();
+            CreateMap<Notification, NotificationDto>().ReverseMap();
+            CreateMap<AuthProvider, AuthProviderDto>().ReverseMap();
         }
     }
 }

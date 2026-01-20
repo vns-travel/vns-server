@@ -39,6 +39,17 @@ namespace DAL.Repositories.Implementations
         public IVehicleRentalServiceRepository VehicleRentalService { get; private set; }
         public IVehicleRepository Vehicle { get; private set; }
         public IVoucherRepository Voucher { get; private set; }        
+        public IAuthProviderRepository AuthProvider { get; private set; }
+        public IDestinationRepository Destination { get; private set; }
+        public IDestinationImageRepository DestinationImage { get; private set; }
+        public IServiceImageRepository ServiceImage { get; private set; }
+        public IBookingItemRepository BookingItem { get; private set; }
+        public IReviewRepository Review { get; private set; }
+        public IConversationRepository Conversation { get; private set; }
+        public INotificationRepository Notification { get; private set; }
+        public IAdminLogRepository AdminLog { get; private set; }
+        public IPlatformRevenueRepository PlatformRevenue { get; private set; }
+        public IOtpCodeRepository OtpCode { get; private set; }
 
         public UnitOfWork(AppDbContext context)
         {
@@ -75,6 +86,17 @@ namespace DAL.Repositories.Implementations
             VehicleRentalService = new VehicleRentalServiceRepository(_context);
             Vehicle = new VehicleRepository(_context);
             Voucher = new VoucherRepository(_context);
+            AuthProvider = new AuthProviderRepository(_context);
+            Destination = new DestinationRepository(_context);
+            DestinationImage = new DestinationImageRepository(_context);
+            ServiceImage = new ServiceImageRepository(_context);
+            BookingItem = new BookingItemRepository(_context);
+            Review = new ReviewRepository(_context);
+            Conversation = new ConversationRepository(_context);
+            Notification = new NotificationRepository(_context);
+            AdminLog = new AdminLogRepository(_context);
+            PlatformRevenue = new PlatformRevenueRepository(_context);
+            OtpCode = new OtpCodeRepository(_context);
         }        
         public void Dispose()
         {
