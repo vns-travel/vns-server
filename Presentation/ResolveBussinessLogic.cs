@@ -23,6 +23,7 @@ namespace Presentation
             services.AddScoped<IBookingItemService, BookingItemService>();
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IPartnerService, PartnerService>();
             
             // Partner Homestay composite create handled by ServiceManager
 
