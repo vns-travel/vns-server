@@ -384,6 +384,10 @@ FodyWeavers.xsd
 .vscode/
 *.code-workspace
 
+# Environment files
+.env
+.env.*
+
 # Local History for Visual Studio Code
 .history/
 
