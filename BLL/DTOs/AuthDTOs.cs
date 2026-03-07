@@ -20,6 +20,28 @@ namespace BLL.DTOs
         public string PhoneNumber { get; set; } = null!;
     }
 
+    /// <summary>
+    /// DTO for partner registration. Minimal fields; partner can update profile later.
+    /// </summary>
+    public class RegisterPartnerDTO
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = null!;
+
+        [Required]
+        [MinLength(6)]
+        public string Password { get; set; } = null!;
+
+        [Required]
+        [Phone]
+        public string PhoneNumber { get; set; } = null!;
+
+        [Required]
+        [StringLength(255)]
+        public string BusinessName { get; set; } = null!;
+    }
+
     public class LoginDTO
     {
         [Required]

@@ -1,4 +1,4 @@
-﻿using DAL.Models;
+using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Context
@@ -24,7 +24,6 @@ namespace DAL.Context
         // New DbSets for missing models
         public virtual DbSet<HomestayService> HomestayServices { get; set; }
         public virtual DbSet<TourService> TourServices { get; set; }
-        public virtual DbSet<VehicleRentalService> VehicleRentalServices { get; set; }
         public virtual DbSet<ComboItem> ComboItems { get; set; }
         public virtual DbSet<ServiceFeedback> ServiceFeedbacks { get; set; }
         public virtual DbSet<ServiceRating> ServiceRatings { get; set; }
@@ -34,8 +33,6 @@ namespace DAL.Context
         public virtual DbSet<TourBooking> TourBookings { get; set; }
         public virtual DbSet<TourSchedule> TourSchedules { get; set; }
         public virtual DbSet<TourItinerary> TourItineraries { get; set; }
-        public virtual DbSet<VehicleRentalBooking> VehicleRentalBookings { get; set; }
-        public virtual DbSet<Vehicle> Vehicles { get; set; }
         public virtual DbSet<UserBankAccount> UserBankAccounts { get; set; }
         public virtual DbSet<PartnerLocation> PartnerLocations { get; set; }
         public virtual DbSet<Refund> Refunds { get; set; }
@@ -79,12 +76,6 @@ namespace DAL.Context
                 .HasOne(s => s.TourService)
                 .WithOne(ts => ts.Service)
                 .HasForeignKey<TourService>(ts => ts.ServiceId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Service>()
-                .HasOne(s => s.VehicleRentalService)
-                .WithOne(vrs => vrs.Service)
-                .HasForeignKey<VehicleRentalService>(vrs => vrs.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Service>()

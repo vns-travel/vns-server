@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DAL.Models
@@ -43,8 +43,6 @@ namespace DAL.Models
         public virtual Destination? Destination { get; set; }
 
         public virtual HomestayService HomestayService { get; set; }
-
-        public virtual VehicleRentalService VehicleRentalService { get; set; }
 
         public virtual TourService TourService { get; set; }
 

@@ -12,6 +12,7 @@ namespace BLL.Services
     public interface IAuthService
     {
         Task<AuthResponseDTO> RegisterAsync(RegisterDTO model);
+        Task<AuthResponseDTO> RegisterPartnerAsync(RegisterPartnerDTO model);
         Task<AuthResponseDTO> LoginAsync(LoginDTO model);
         Task<AuthResponseDTO> RefreshTokenAsync(string refreshToken);
         Task SendForgotPasswordOTPAsync(ForgotPasswordDTO model);
@@ -63,6 +64,65 @@ namespace BLL.Services
             user.Password = _passwordHasher.HashPassword(user, model.Password);
 
             await _unitOfWork.User.AddAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            var token = _jwtService.GenerateJwtToken(user);
+            var refreshToken = _jwtService.GenerateRefreshToken(user);
+            var expiresAt = GetTokenExpiryUtc(token);
+
+            return new AuthResponseDTO
+            {
+                Token = token,
+                RefreshToken = refreshToken,
+                ExpiresAt = expiresAt,
+                UserId = user.UserId.ToString(),
+                Email = user.Email,
+                Role = user.Role.ToString()
+            };
+        }
+
+        public async Task<AuthResponseDTO> RegisterPartnerAsync(RegisterPartnerDTO model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Password))
+            {
+                throw new Exception("Password is required.");
+            }
+            var email = NormalizeEmail(model.Email);
+            var existingUser = await _unitOfWork.User.GetAsync(u => u.Email == email);
+            if (existingUser != null)
+            {
+                throw new Exception("User with this email already exists");
+            }
+
+            var user = new User
+            {
+                UserId = Guid.NewGuid(),
+                Email = email,
+                FullName = model.BusinessName,
+                PhoneNumber = model.PhoneNumber,
+                Role = (int)Role.Partner,
+                Password = string.Empty
+            };
+            user.Password = _passwordHasher.HashPassword(user, model.Password);
+
+            var partner = new Partner
+            {
+                PartnerId = Guid.NewGuid(),
+                UserId = user.UserId,
+                BusinessName = model.BusinessName,
+                BusinessCategory = string.Empty,
+                ContactInfo = string.Empty,
+                Description = string.Empty,
+                TaxCode = string.Empty,
+                BusinessLicenseNumber = string.Empty,
+                IsVerified = false,
+                VerificationStatus = 0,
+                PlatformFeePercentage = 0,
+                PlatformFeeType = 0
+            };
+
+            await _unitOfWork.User.AddAsync(user);
+            await _unitOfWork.Partner.AddAsync(partner);
             await _unitOfWork.SaveChangesAsync();
 
             var token = _jwtService.GenerateJwtToken(user);

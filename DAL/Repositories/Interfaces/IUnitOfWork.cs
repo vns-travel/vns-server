@@ -1,4 +1,4 @@
-﻿namespace DAL.Repositories.Interfaces
+namespace DAL.Repositories.Interfaces
 {
     public interface IUnitOfWork
     {
@@ -29,10 +29,6 @@
         public ITourServiceRepository TourService { get; }
         public IUserBankAccountRepository UserBankAccount { get; }
         public IUserRepository User { get; }
-        public IVehicleCategoryRepository VehicleCategory { get; }
-        public IVehicleRentalBookingRepository VehicleRentalBooking { get; }
-        public IVehicleRentalServiceRepository VehicleRentalService { get; }
-        public IVehicleRepository Vehicle { get; }
         public IVoucherRepository Voucher { get; }
         public IAuthProviderRepository AuthProvider { get; }
         public IDestinationRepository Destination { get; }

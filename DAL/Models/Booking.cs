@@ -1,4 +1,4 @@
-﻿using DAL.Models.Enum;
+using DAL.Models.Enum;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -43,7 +43,6 @@ namespace DAL.Models
         public virtual User User { get; set; }
 
         public virtual ICollection<HomestayBooking> HomestayBookings { get; set; }
-        public virtual ICollection<VehicleRentalBooking> VehicleRentalBookings { get; set; }
         public virtual ICollection<TourBooking> TourBookings { get; set; }
         public virtual ICollection<Payment> Payments { get; set; }
         public virtual ICollection<Refund> Refunds { get; set; }

@@ -1,4 +1,4 @@
-﻿using BLL.DTOs;
+using BLL.DTOs;
 using BLL.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
@@ -23,6 +23,20 @@ namespace Presentation.Controllers
             try
             {
                 var result = await _authService.RegisterAsync(model);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("register-partner")]
+        public async Task<ActionResult<AuthResponseDTO>> RegisterPartner([FromBody] RegisterPartnerDTO model)
+        {
+            try
+            {
+                var result = await _authService.RegisterPartnerAsync(model);
                 return Ok(result);
             }
             catch (Exception ex)

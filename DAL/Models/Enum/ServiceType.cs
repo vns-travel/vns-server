@@ -1,9 +1,8 @@
-﻿namespace DAL.Models.Enum
+namespace DAL.Models.Enum
 {
     public enum ServiceType
     {
         Homestay,
-        Tour,
-        VehicaleRental
+        Tour
     }
 }

@@ -1,4 +1,4 @@
-﻿using DAL.Context;
+using DAL.Context;
 using DAL.Repositories.Interfaces;
 
 namespace DAL.Repositories.Implementations
@@ -34,10 +34,6 @@ namespace DAL.Repositories.Implementations
         public ITourServiceRepository TourService { get; private set; }
         public IUserBankAccountRepository UserBankAccount { get; private set; }
         public IUserRepository User { get; private set; }
-        public IVehicleCategoryRepository VehicleCategory { get; private set; }
-        public IVehicleRentalBookingRepository VehicleRentalBooking { get; private set; }
-        public IVehicleRentalServiceRepository VehicleRentalService { get; private set; }
-        public IVehicleRepository Vehicle { get; private set; }
         public IVoucherRepository Voucher { get; private set; }        
         public IAuthProviderRepository AuthProvider { get; private set; }
         public IDestinationRepository Destination { get; private set; }
@@ -81,10 +77,6 @@ namespace DAL.Repositories.Implementations
             TourService = new TourServiceRepository(_context);
             UserBankAccount = new UserBankAccountRepository(_context);
             User = new UserRepository(_context);
-            VehicleCategory = new VehicleCategoryRepository(_context);
-            VehicleRentalBooking = new VehicleRentalBookingRepository(_context);
-            VehicleRentalService = new VehicleRentalServiceRepository(_context);
-            Vehicle = new VehicleRepository(_context);
             Voucher = new VoucherRepository(_context);
             AuthProvider = new AuthProviderRepository(_context);
             Destination = new DestinationRepository(_context);
