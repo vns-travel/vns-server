@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BLL.DTOs;
 using BLL.Services.Interfaces;
 using DAL.Models;
@@ -30,6 +30,8 @@ namespace BLL.Services.Implementations
                     (!filterDto.ServiceId.HasValue || s.ServiceId == filterDto.ServiceId) &&
                     (!filterDto.LocationId.HasValue || s.LocationId == filterDto.LocationId) &&
                     (!filterDto.PartnerId.HasValue || s.PartnerId == filterDto.PartnerId) &&
+                    (!filterDto.ServiceType.HasValue || s.ServiceType == (int)filterDto.ServiceType.Value) &&
+                    (filterDto.IncludeInactive || s.IsActive) &&
                     (string.IsNullOrEmpty(filterDto.Title) || s.Title.Contains(filterDto.Title));
             }
 

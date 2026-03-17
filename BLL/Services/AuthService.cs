@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using BLL.Services.Interfaces;
 
 namespace BLL.Services
 {
@@ -26,17 +27,20 @@ namespace BLL.Services
         private readonly IJwtService _jwtService;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IEmailService _emailService;
+        private readonly IVoucherService _voucherService;
 
         public AuthService(
             IUnitOfWork unitOfWork,
             IJwtService jwtService,
             IPasswordHasher<User> passwordHasher,
-            IEmailService emailService)
+            IEmailService emailService,
+            IVoucherService voucherService)
         {
             _unitOfWork = unitOfWork;
             _jwtService = jwtService;
             _passwordHasher = passwordHasher;
             _emailService = emailService;
+            _voucherService = voucherService;
         }
 
         public async Task<AuthResponseDTO> RegisterAsync(RegisterDTO model)
@@ -65,6 +69,7 @@ namespace BLL.Services
 
             await _unitOfWork.User.AddAsync(user);
             await _unitOfWork.SaveChangesAsync();
+            await _voucherService.IssueWelcomeVoucherAsync(user.UserId);
 
             var token = _jwtService.GenerateJwtToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken(user);

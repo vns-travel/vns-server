@@ -46,7 +46,8 @@ namespace BLL.Services.Implementations
 				ServiceType = (int)ServiceType.Homestay,
 				Title = dto.Title,
 				Description = dto.Description,
-				IsActive = true
+				PlatformFeeAmount = 0,
+				IsActive = false
 			};
 			await _unitOfWork.Service.AddAsync(service);
 
@@ -74,12 +75,10 @@ namespace BLL.Services.Implementations
 			return (homestay.HomestayId, service.ServiceId, location.LocationId);
 		}
 
-		public async Task<Guid> CreateRoomAsync(Guid homestayId, CreateHomestayRoomRequestDto dto)
+		public async Task<Guid> CreateRoomAsync(Guid partnerId, Guid homestayId, CreateHomestayRoomRequestDto dto)
 		{
 			if (dto.NumberOfRooms <= 0) dto.NumberOfRooms = 1;
-			// Ensure homestay exists
-			var homestay = await _unitOfWork.HomestayService.GetAsync(h => h.HomestayId == homestayId);
-			if (homestay == null) throw new KeyNotFoundException("Homestay not found");
+			var homestay = await GetOwnedHomestayAsync(partnerId, homestayId);
 			Guid lastRoomId = Guid.Empty;
 			for (int i = 0; i < dto.NumberOfRooms; i++)
 			{
@@ -107,58 +106,95 @@ namespace BLL.Services.Implementations
 			return lastRoomId;
 		}
 
-		public async Task<int> CreateAvailabilityBulkAsync(Guid homestayId, BulkAvailabilityRequestDto dto)
+		public async Task<int> CreateAvailabilityBulkAsync(Guid partnerId, Guid homestayId, BulkAvailabilityRequestDto dto)
 		{
 			if (dto.EndDate < dto.StartDate) throw new ArgumentException("EndDate must be after StartDate");
-			// Ensure homestay exists
-			var homestay = await _unitOfWork.HomestayService.GetAsync(h => h.HomestayId == homestayId);
-			if (homestay == null) throw new KeyNotFoundException("Homestay not found");
+			var homestay = await GetOwnedHomestayAsync(partnerId, homestayId);
 			int generated = 0;
+            var roomIds = dto.Rooms.Select(r => r.RoomId).Distinct().ToList();
+            var existingAvailabilities = await _unitOfWork.HomestayAvailability.GetAllAsync(
+                a => a.HomestayId == homestayId &&
+                     a.Date >= dto.StartDate.Date &&
+                     a.Date <= dto.EndDate.Date &&
+                     roomIds.Contains(a.RoomId ?? Guid.Empty),
+                tracked: true);
+
+            var availabilityLookup = existingAvailabilities.ToDictionary(
+                a => $"{a.RoomId}:{a.Date:yyyyMMdd}");
 			var totalDays = (dto.EndDate.Date - dto.StartDate.Date).Days + 1;
 			for (int d = 0; d < totalDays; d++)
 			{
 				var date = dto.StartDate.Date.AddDays(d);
 				foreach (var room in dto.Rooms)
 				{
-					var availability = new HomestayAvailability
-					{
-						AvailabilityId = Guid.NewGuid(),
-						HomestayId = homestayId,
-						RoomId = room.RoomId,
-						Date = date,
-						IsAvailable = true,
-						Price = room.DefaultPrice,
-						MinNights = room.MinNights
-					};
-					await _unitOfWork.HomestayAvailability.AddAsync(availability);
-					generated++;
+                    var key = $"{room.RoomId}:{date:yyyyMMdd}";
+                    if (availabilityLookup.TryGetValue(key, out var existingAvailability))
+                    {
+                        existingAvailability.IsAvailable = true;
+                        existingAvailability.Price = room.DefaultPrice;
+                        existingAvailability.MinNights = room.MinNights;
+                        await _unitOfWork.HomestayAvailability.UpdateAsync(existingAvailability);
+                    }
+                    else
+                    {
+                        var availability = new HomestayAvailability
+                        {
+                            AvailabilityId = Guid.NewGuid(),
+                            HomestayId = homestayId,
+                            RoomId = room.RoomId,
+                            Date = date,
+                            IsAvailable = true,
+                            Price = room.DefaultPrice,
+                            MinNights = room.MinNights
+                        };
+                        await _unitOfWork.HomestayAvailability.AddAsync(availability);
+                        availabilityLookup[key] = availability;
+                        generated++;
+                    }
 				}
 			}
 			await _unitOfWork.SaveChangesAsync();
 			return generated;
 		}
 
-		public async Task<HomestayActivationResponseDto> ActivateHomestayAsync(Guid homestayId, HomestayActivationRequestDto dto)
+		public async Task<HomestayActivationResponseDto> ActivateHomestayAsync(Guid partnerId, Guid homestayId, HomestayActivationRequestDto dto)
 		{
-			var homestay = await _unitOfWork.HomestayService.GetAsync(h => h.HomestayId == homestayId);
-			if (homestay == null) throw new KeyNotFoundException("Homestay not found");
-			var service = await _unitOfWork.Service.GetAsync(s => s.ServiceId == homestay.ServiceId);
+			var homestay = await GetOwnedHomestayAsync(partnerId, homestayId);
+			var service = await _unitOfWork.Service.GetAsync(s => s.ServiceId == homestay.ServiceId, tracked: true);
 			if (service == null) throw new KeyNotFoundException("Service not found");
 
-			if (dto.Confirmed)
+			if (!dto.Confirmed)
 			{
-				service.IsActive = true;
-				service.UpdatedAt = DateTime.UtcNow;
-				await _unitOfWork.Service.UpdateAsync(service);
-				await _unitOfWork.SaveChangesAsync();
+				throw new ArgumentException("Homestay submission must be confirmed by the partner before review.");
 			}
+
+			service.IsActive = false;
+			service.UpdatedAt = DateTime.UtcNow;
+			await _unitOfWork.Service.UpdateAsync(service);
+			await _unitOfWork.SaveChangesAsync();
 
 			return new HomestayActivationResponseDto
 			{
 				HomestayId = homestay.HomestayId,
 				ServiceId = service.ServiceId,
-				Status = service.IsActive ? "Active" : "Inactive"
+				Status = "PendingManagerApproval"
 			};
+		}
+
+		private async Task<HomestayService> GetOwnedHomestayAsync(Guid partnerId, Guid homestayId)
+		{
+			var homestay = await _unitOfWork.HomestayService.GetAsync(h => h.HomestayId == homestayId, includeProperties: "Service");
+			if (homestay == null)
+			{
+				throw new KeyNotFoundException("Homestay not found");
+			}
+
+			if (homestay.Service == null || homestay.Service.PartnerId != partnerId)
+			{
+				throw new UnauthorizedAccessException("Homestay does not belong to partner");
+			}
+
+			return homestay;
 		}
     }
 } 

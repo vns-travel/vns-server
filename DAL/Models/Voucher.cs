@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DAL.Models
@@ -36,5 +36,7 @@ namespace DAL.Models
         // Navigation Properties
         [ForeignKey("UserId")]
         public virtual User User { get; set; }
+
+        public virtual ICollection<Booking> Bookings { get; set; }
     }
 }

@@ -14,8 +14,8 @@ namespace BLL.Services.Interfaces
         Task UpdateAsync(HomestayService entity);
         Task DeleteAsync(Guid id);
         Task<(Guid homestayId, Guid serviceId, Guid locationId)> CreatePartnerHomestayAsync(Guid partnerId, CreateHomestayRequestDto dto);
-        Task<Guid> CreateRoomAsync(Guid homestayId, CreateHomestayRoomRequestDto dto);
-        Task<int> CreateAvailabilityBulkAsync(Guid homestayId, BulkAvailabilityRequestDto dto);
-        Task<HomestayActivationResponseDto> ActivateHomestayAsync(Guid homestayId, HomestayActivationRequestDto dto);
+        Task<Guid> CreateRoomAsync(Guid partnerId, Guid homestayId, CreateHomestayRoomRequestDto dto);
+        Task<int> CreateAvailabilityBulkAsync(Guid partnerId, Guid homestayId, BulkAvailabilityRequestDto dto);
+        Task<HomestayActivationResponseDto> ActivateHomestayAsync(Guid partnerId, Guid homestayId, HomestayActivationRequestDto dto);
     }
 } 

@@ -27,6 +27,9 @@ namespace DAL.Models
 
         public string Description { get; set; }
 
+        [Column(TypeName = "decimal(15,2)")]
+        public decimal PlatformFeeAmount { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

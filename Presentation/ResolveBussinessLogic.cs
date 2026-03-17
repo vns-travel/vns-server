@@ -1,11 +1,9 @@
-﻿using BLL;
+using BLL;
 using BLL.Services.Implementations;
 using BLL.Services.Interfaces;
 using DAL.Context;
 using DAL.Repositories.Implementations;
 using DAL.Repositories.Interfaces;
-using Google.Apis.Auth.AspNetCore3;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 namespace Presentation
@@ -24,7 +22,11 @@ namespace Presentation
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IPartnerService, PartnerService>();
-            
+            services.AddScoped<IHomestayService, HomestayServiceService>();
+            services.AddScoped<ITourService, TourServiceService>();
+            services.AddScoped<IComboService, ComboService>();
+            services.AddScoped<IVoucherService, VoucherService>();
+
             // Partner Homestay composite create handled by ServiceManager
 
             services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);

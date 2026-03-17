@@ -1,9 +1,10 @@
 using BLL.DTOs;
 using BLL.Services.Interfaces;
+using DAL.Models.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using DAL.Repositories.Interfaces;
+using Presentation.Extensions;
 
 namespace Presentation.Controllers
 {
@@ -26,23 +27,29 @@ namespace Presentation.Controllers
         {
             if (request == null) return BadRequest("Request is null");
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
-            var userId = Guid.Parse(userIdClaim);
-            var partner = await _unitOfWork.Partner.GetAsync(p => p.UserId == userId);
-            if (partner == null) return Forbid();
-            var partnerId = partner.PartnerId;
-
-            var (homestayId, serviceId, locationId) = await _homestayService.CreatePartnerHomestayAsync(partnerId, request);
-
-            var response = new CreateHomestayResponseDto
+            try
             {
-                HomestayId = homestayId,
-                ServiceId = serviceId,
-                LocationId = locationId
-            };
+                User.RequireRole(Role.Partner);
+                var userId = User.GetRequiredUserId();
+                var partner = await _unitOfWork.Partner.GetAsync(p => p.UserId == userId);
+                if (partner == null) return Forbid();
+                var partnerId = partner.PartnerId;
 
-            return StatusCode(201, response);
+                var (homestayId, serviceId, locationId) = await _homestayService.CreatePartnerHomestayAsync(partnerId, request);
+
+                var response = new CreateHomestayResponseDto
+                {
+                    HomestayId = homestayId,
+                    ServiceId = serviceId,
+                    LocationId = locationId
+                };
+
+                return StatusCode(201, response);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
         }
 
         [HttpPost("{homestayId}/rooms")]
@@ -50,14 +57,24 @@ namespace Presentation.Controllers
         {
             if (request == null) return BadRequest("Request is null");
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
-            var userId = Guid.Parse(userIdClaim);
-            var partner = await _unitOfWork.Partner.GetAsync(p => p.UserId == userId);
-            if (partner == null) return Forbid();
+            try
+            {
+                User.RequireRole(Role.Partner);
+                var userId = User.GetRequiredUserId();
+                var partner = await _unitOfWork.Partner.GetAsync(p => p.UserId == userId);
+                if (partner == null) return Forbid();
 
-            var roomId = await _homestayService.CreateRoomAsync(homestayId, request);
-            return StatusCode(201, new CreateHomestayRoomResponseDto { RoomId = roomId });
+                var roomId = await _homestayService.CreateRoomAsync(partner.PartnerId, homestayId, request);
+                return StatusCode(201, new CreateHomestayRoomResponseDto { RoomId = roomId });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
         }
 
         [HttpPost("{homestayId}/availability/bulk")]
@@ -65,14 +82,28 @@ namespace Presentation.Controllers
         {
             if (request == null) return BadRequest("Request is null");
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
-            var userId = Guid.Parse(userIdClaim);
-            var partner = await _unitOfWork.Partner.GetAsync(p => p.UserId == userId);
-            if (partner == null) return Forbid();
+            try
+            {
+                User.RequireRole(Role.Partner);
+                var userId = User.GetRequiredUserId();
+                var partner = await _unitOfWork.Partner.GetAsync(p => p.UserId == userId);
+                if (partner == null) return Forbid();
 
-            var generated = await _homestayService.CreateAvailabilityBulkAsync(homestayId, request);
-            return StatusCode(201, new BulkAvailabilityResponseDto { GeneratedRecords = generated });
+                var generated = await _homestayService.CreateAvailabilityBulkAsync(partner.PartnerId, homestayId, request);
+                return StatusCode(201, new BulkAvailabilityResponseDto { GeneratedRecords = generated });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
         }
 
         [HttpPost("{homestayId}/create")]
@@ -80,14 +111,28 @@ namespace Presentation.Controllers
         {
             if (request == null) return BadRequest("Request is null");
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
-            var userId = Guid.Parse(userIdClaim);
-            var partner = await _unitOfWork.Partner.GetAsync(p => p.UserId == userId);
-            if (partner == null) return Forbid();
+            try
+            {
+                User.RequireRole(Role.Partner);
+                var userId = User.GetRequiredUserId();
+                var partner = await _unitOfWork.Partner.GetAsync(p => p.UserId == userId);
+                if (partner == null) return Forbid();
 
-            var response = await _homestayService.ActivateHomestayAsync(homestayId, request);
-            return Ok(response);
+                var response = await _homestayService.ActivateHomestayAsync(partner.PartnerId, homestayId, request);
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
         }
     }
 }

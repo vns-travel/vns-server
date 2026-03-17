@@ -84,6 +84,7 @@ builder.Services.AddAuthentication(options =>
         // Get required services
         var db = context.HttpContext.RequestServices.GetRequiredService<IUnitOfWork>();
         var jwtService = context.HttpContext.RequestServices.GetRequiredService<IJwtService>();
+        var voucherService = context.HttpContext.RequestServices.GetRequiredService<BLL.Services.Interfaces.IVoucherService>();
 
         var user = await db.User.GetAsync(u => u.Email == email);
         if (user == null)
@@ -98,6 +99,7 @@ builder.Services.AddAuthentication(options =>
             };
             await db.User.AddAsync(user);
             await db.SaveChangesAsync();
+            await voucherService.IssueWelcomeVoucherAsync(user.UserId);
         }
 
         var token = jwtService.GenerateJwtToken(user);

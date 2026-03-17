@@ -1,3 +1,4 @@
+using BLL.DTOs.Tour;
 using DAL.Models;
 
 namespace BLL.Services.Interfaces
@@ -9,5 +10,7 @@ namespace BLL.Services.Interfaces
         Task AddAsync(TourService entity);
         Task UpdateAsync(TourService entity);
         Task DeleteAsync(Guid id);
+        Task<TourScheduleResponseDto> CreateScheduleAsync(Guid userId, Guid tourId, CreateTourScheduleDto dto);
+        Task<TourItineraryResponseDto> CreateItineraryAsync(Guid userId, Guid tourId, CreateTourItineraryDto dto);
     }
 } 

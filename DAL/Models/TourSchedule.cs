@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DAL.Models
@@ -25,6 +25,9 @@ namespace DAL.Models
 
         [StringLength(255)]
         public string MeetingPoint { get; set; }
+
+        [Column(TypeName = "decimal(15,2)")]
+        public decimal Price { get; set; }
 
         public bool IsActive { get; set; } = true;
 

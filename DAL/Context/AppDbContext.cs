@@ -115,6 +115,12 @@ namespace DAL.Context
                 .HasForeignKey(ci => ci.ComboId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Combo>()
+                .HasMany(c => c.Bookings)
+                .WithOne(b => b.Combo)
+                .HasForeignKey(b => b.ComboId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ComboItem>()
                 .HasOne(ci => ci.Service)
                 .WithMany(s => s.ComboItems)
@@ -190,6 +196,12 @@ namespace DAL.Context
                 .WithOne(sf => sf.Booking)
                 .HasForeignKey(sf => sf.BookingId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.Voucher)
+                .WithMany(v => v.Bookings)
+                .HasForeignKey(b => b.VoucherId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Booking>()
                 .HasMany(b => b.BookingItems)
@@ -285,6 +297,10 @@ namespace DAL.Context
                 .WithMany(u => u.AuthProviders)
                 .HasForeignKey(ap => ap.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Voucher>()
+                .HasIndex(v => v.VoucherCode)
+                .IsUnique();
 
             modelBuilder.Entity<Destination>()
                 .Property(d => d.Latitude)

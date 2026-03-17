@@ -12,6 +12,9 @@ namespace DAL.Models
         [Required]
         public Guid UserId { get; set; }
 
+        public Guid? ComboId { get; set; }
+        public Guid? VoucherId { get; set; }
+
         [Required]
         [StringLength(50)]
         public string BookingReference { get; set; }
@@ -20,7 +23,16 @@ namespace DAL.Models
         public int BookingStatus { get; set; }
 
         [Column(TypeName = "decimal(15,2)")]
+        public decimal OriginalAmount { get; set; }
+
+        [Column(TypeName = "decimal(15,2)")]
+        public decimal DiscountAmount { get; set; }
+
+        [Column(TypeName = "decimal(15,2)")]
         public decimal TotalAmount { get; set; }
+
+        [Column(TypeName = "decimal(15,2)")]
+        public decimal FinalAmount { get; set; }
 
         [Column(TypeName = "decimal(15,2)")]
         public decimal DepositAmount { get; set; }
@@ -34,6 +46,8 @@ namespace DAL.Models
         public int NumberOfGuests { get; set; }
 
         public string SpecialRequests { get; set; }
+        [StringLength(50)]
+        public string? VoucherCode { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -41,6 +55,12 @@ namespace DAL.Models
         // Navigation Properties
         [ForeignKey("UserId")]
         public virtual User User { get; set; }
+
+        [ForeignKey("ComboId")]
+        public virtual Combo? Combo { get; set; }
+
+        [ForeignKey("VoucherId")]
+        public virtual Voucher? Voucher { get; set; }
 
         public virtual ICollection<HomestayBooking> HomestayBookings { get; set; }
         public virtual ICollection<TourBooking> TourBookings { get; set; }

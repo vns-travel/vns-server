@@ -1,8 +1,9 @@
 using BLL.DTOs;
 using BLL.Services.Interfaces;
+using DAL.Models.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Presentation.Extensions;
 
 namespace Presentation.Controllers
 {
@@ -21,9 +22,10 @@ namespace Presentation.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PartnerServiceCreateDto dto)
         {
-            var userId = GetUserId();
             try
             {
+                User.RequireRole(Role.Partner);
+                var userId = User.GetRequiredUserId();
                 var created = await _partnerService.CreateAsync(userId, dto);
                 return StatusCode(201, created);
             }
@@ -31,20 +33,33 @@ namespace Presentation.Controllers
             {
                 return NotFound(ex.Message);
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
         }
 
         [HttpPut("{serviceId:guid}")]
         public async Task<IActionResult> Update(Guid serviceId, [FromBody] PartnerServiceUpdateDto dto)
         {
-            var userId = GetUserId();
             try
             {
+                User.RequireRole(Role.Partner);
+                var userId = User.GetRequiredUserId();
                 var updated = await _partnerService.UpdateAsync(userId, serviceId, dto);
                 return Ok(updated);
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -55,9 +70,10 @@ namespace Presentation.Controllers
         [HttpDelete("{serviceId:guid}")]
         public async Task<IActionResult> Delete(Guid serviceId)
         {
-            var userId = GetUserId();
             try
             {
+                User.RequireRole(Role.Partner);
+                var userId = User.GetRequiredUserId();
                 var deleted = await _partnerService.DeleteAsync(userId, serviceId);
                 return deleted ? Ok("Service deleted successfully") : NotFound("Service not found");
             }
@@ -69,16 +85,6 @@ namespace Presentation.Controllers
             {
                 return Forbid(ex.Message);
             }
-        }
-
-        private Guid GetUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim))
-            {
-                throw new UnauthorizedAccessException("User not authenticated");
-            }
-            return Guid.Parse(userIdClaim);
         }
     }
 }

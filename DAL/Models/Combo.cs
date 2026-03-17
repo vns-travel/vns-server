@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DAL.Models
@@ -28,6 +28,8 @@ namespace DAL.Models
 
         public int MaxBookings { get; set; }
         public int CurrentBookings { get; set; }
+        public bool IsActive { get; set; } = false;
+        public string AdditionalServices { get; set; } = "[]";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -37,5 +39,6 @@ namespace DAL.Models
         public virtual Partner Partner { get; set; }
 
         public virtual ICollection<ComboItem> ComboItems { get; set; }
+        public virtual ICollection<Booking> Bookings { get; set; }
     }
 }
